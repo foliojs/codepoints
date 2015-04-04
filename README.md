@@ -4,12 +4,11 @@ A parser for files in the Unicode database. Exports a giant array of codepoint o
 character represented by Unicode, with many properties derived from files in the Unicode database.
 
 **BUILD SCRIPTS ONLY**: Use in production is not recommended
-as the parsers are not optimized for speed, and the array uses a huge amount of memory. To access this
-data in real world applications, use modules that have precompiled the data into a compressed form:
+as the parsers are not optimized for speed, the text files are huge, and the resulting array uses a 
+huge amount of memory. To access this data in real world applications, use modules that have 
+precompiled the data into a compressed form:
 
-* unicode-properties
-* unicode-normalizer
-* case-converter
+* [unicode-properties](https://github.com/devongovett/unicode-properties)
 
 ## API
 
