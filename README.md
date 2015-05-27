@@ -1,22 +1,44 @@
 # codepoints
 
-A parser for files in the Unicode database. Exports a giant array of codepoint objects for every
-character represented by Unicode, with many properties derived from files in the Unicode database.
+A parser for files in the Unicode database. Produces a giant array of codepoint objects for
+every character represented by Unicode, with many properties derived from files in the Unicode
+database.
 
 **BUILD SCRIPTS ONLY**: Use in production is not recommended
-as the parsers are not optimized for speed, the text files are huge, and the resulting array uses a 
-huge amount of memory. To access this data in real world applications, use modules that have 
+as the parsers are not optimized for speed, the text files are huge, and the resulting array uses a
+huge amount of memory. To access this data in real world applications, use modules that have
 precompiled the data into a compressed form:
 
 * [unicode-properties](https://github.com/devongovett/unicode-properties)
 
-## API
+## Installation
 
 Install using npm:
 
     npm install codepoints
 
-Each element in the exported array is an object containing the following properties:
+## Usage
+
+Basic usage:
+
+```js
+codepoints = require('codepoints');
+```
+
+The parser generates data by reading the text files contained in the
+[Unicode Character Database](http://unicode.org/ucd/). By default, it will use the database
+bundled with this package. To use a custom version of UCD, use `codepoints/parser` instead,
+which accepts an optional path to a directory containing the uncompressed UCD data:
+
+```js
+parser = require('codepoints/parser');
+codepoints = parser('/path/to/UCD');
+```
+
+## Codepoint data
+
+Each element in the generated array is either `undefined` (for unassigned code
+points), or an object containing the following properties:
 
 * `code` - the code point index
 * `name` - character name

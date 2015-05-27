@@ -21,7 +21,7 @@
     "coffee-script": "^1.8.0"
   },
   "scripts": {
-    "prepublish": "coffee -c index.coffee",
+    "prepublish": "coffee -c index.coffee && coffee -c parser.coffee",
     "postpublish": "rm -f *.js"
   }
 }
