@@ -109,9 +109,6 @@ module.exports = (ucdPath = __dirname + '/data')->
       unless codePoint.numeric
         cp.numeric = val
 
-      else if val isnt codePoint.numeric
-        throw new Error 'Numeric value does not match derived value'
-
   combiningClasses = {}
   readFile 'PropertyValueAliases.txt', false, (parts) ->
     if parts[0] is 'ccc'
