@@ -84,7 +84,7 @@ module.exports = (ucdPath = __dirname + '/data')->
 
     data = fs.readFileSync ucdPath + '/' + filename, 'ascii'
     for line in data.split('\n') when line.length > 0 and line[0] isnt '#'
-      parts = line.replace(/\s*#.*$/, '').split /;\s*/
+      parts = line.replace(/\s*#.*$/, '').split /\s*;\s*/
 
       # Parse codepoint range if requested
       if parse
@@ -110,11 +110,15 @@ module.exports = (ucdPath = __dirname + '/data')->
         cp.numeric = val
 
   combiningClasses = {}
+  joiningTypes = {}
   readFile 'PropertyValueAliases.txt', false, (parts) ->
     if parts[0] is 'ccc'
       num = parseInt parts[1]
       name = parts[3]
       combiningClasses[num] = name
+      
+    if parts[0] is 'jt'
+      joiningTypes[parts[1]] = parts[2]
 
   for codePoint in codePoints when codePoint?
     codePoint.combiningClassName = combiningClasses[codePoint.combiningClass]
@@ -171,6 +175,13 @@ module.exports = (ucdPath = __dirname + '/data')->
     if prop in ['NFD_QC', 'NFKD_QC', 'NFC_QC', 'NFKC_QC']
       for code in [start..end] by 1
         codePoints[code][prop] = if val is 'Y' then 0 else if val is 'N' then 1 else 2
+        
+  readFile 'ArabicShaping.txt', (parts) ->
+    [[start, end], name, joiningType, joiningGroup] = parts
+  
+    for code in [start..end] by 1
+      codePoints[code]?.joiningType = joiningTypes[joiningType]
+      codePoints[code]?.joiningGroup = joiningGroup
 
   for codePoint in codePoints
     if codePoint?.decomposition.length > 1 and not codePoint.isCompat and not codePoint.isExcluded
