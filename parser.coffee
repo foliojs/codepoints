@@ -39,6 +39,8 @@ module.exports = (ucdPath = __dirname + '/data')->
       @block = null
       @script = null
       @eastAsianWidth = null
+      @joiningType = null
+      @joiningGroup = null
 
       for prop in ['NFD_QC', 'NFKD_QC', 'NFC_QC', 'NFKC_QC']
         this[prop] = 0 # Yes

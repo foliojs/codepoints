@@ -65,6 +65,8 @@ points), or an object containing the following properties:
 * `NFKC_QC` - quickcheck value for NFKC (0 = YES, 1 = NO, 2 = MAYBE)
 * `NFD_QC` - quickcheck value for NFD (0 = YES, 1 = NO)
 * `NFKD_QC` - quickcheck value for NFKD (0 = YES, 1 = NO)
+* `joiningType` - arabic joining type
+* `joiningGroup` - arabic joining group
 
 ## License
 
