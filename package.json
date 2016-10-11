@@ -1,6 +1,6 @@
 {
   "name": "codepoints",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A parser for files in the Unicode database",
   "repository": {
     "type": "git",
