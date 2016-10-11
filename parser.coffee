@@ -41,6 +41,8 @@ module.exports = (ucdPath = __dirname + '/data')->
       @eastAsianWidth = null
       @joiningType = null
       @joiningGroup = null
+      @indicSyllabicCategory = null
+      @indicPositionalCategory = null
 
       for prop in ['NFD_QC', 'NFKD_QC', 'NFC_QC', 'NFKC_QC']
         this[prop] = 0 # Yes
@@ -184,6 +186,16 @@ module.exports = (ucdPath = __dirname + '/data')->
     for code in [start..end] by 1
       codePoints[code]?.joiningType = joiningTypes[joiningType]
       codePoints[code]?.joiningGroup = joiningGroup
+
+  readFile 'IndicPositionalCategory.txt', (parts) ->
+    [[start, end], prop] = parts
+    for code in [start..end] by 1
+      codePoints[code]?.indicPositionalCategory = prop
+
+  readFile 'IndicSyllabicCategory.txt', (parts) ->
+    [[start, end], prop] = parts
+    for code in [start..end] by 1
+      codePoints[code]?.indicSyllabicCategory = prop
 
   for codePoint in codePoints
     if codePoint?.decomposition.length > 1 and not codePoint.isCompat and not codePoint.isExcluded
