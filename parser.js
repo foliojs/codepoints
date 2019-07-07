@@ -1,23 +1,17 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS201: Simplify complex destructure assignments
- * DS203: Remove `|| {}` from converted for-own loops
- * DS205: Consider reworking code to avoid use of IIFEs
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const fs = require('fs');
 
-module.exports = function(ucdPath){
+module.exports = function (ucdPath) {
   let codePoint, cp, end, line, name, parts;
-  if (ucdPath == null) { ucdPath = __dirname + '/data'; }
+  if (ucdPath == null) {
+    ucdPath = __dirname + '/data';
+  }
   const codePoints = [];
 
-  const parseCodes = function(code) {
-    if (!code) { return null; }
-    return Array.from(code.split(' ')).filter((i) => i).map((i) => parseInt(i, 16));
+  const parseCodes = function (code) {
+    if (!code) {
+      return null;
+    }
+    return code.split(' ').filter((i) => i).map((i) => parseInt(i, 16));
   };
 
   // Class that represents a unicode code point
@@ -25,16 +19,16 @@ module.exports = function(ucdPath){
     constructor(parts) {
       let decimal, digit;
       [this.code, this.name, this.category,
-       this.combiningClass, this.bidiClass,
-       this.decomposition, decimal, digit,
-       this.numeric, this.bidiMirrored, this.unicode1Name,
-       this.isoComment, this.uppercase, this.lowercase,
-       this.titlecase] = Array.from(parts);
+      this.combiningClass, this.bidiClass,
+      this.decomposition, decimal, digit,
+      this.numeric, this.bidiMirrored, this.unicode1Name,
+      this.isoComment, this.uppercase, this.lowercase,
+      this.titlecase] = parts;
 
-      this.code           = parseInt(this.code, 16);
+      this.code = parseInt(this.code, 16);
       this.combiningClass = parseInt(this.combiningClass) || 0;
-      this.decomposition  = parseCodes(this.decomposition) || [];
-      this.bidiMirrored   = this.bidiMirrored === 'Y';
+      this.decomposition = parseCodes(this.decomposition) || [];
+      this.bidiMirrored = this.bidiMirrored === 'Y';
 
       this.uppercase = this.uppercase ? [parseInt(this.uppercase, 16)] : null;
       this.lowercase = this.lowercase ? [parseInt(this.lowercase, 16)] : null;
@@ -60,8 +54,8 @@ module.exports = function(ucdPath){
       this.indicPositionalCategory = null;
 
       for (let prop of ['NFD_QC', 'NFKD_QC', 'NFC_QC', 'NFKC_QC']) {
-        this[prop] = 0;
-      } // Yes
+        this[prop] = 0; // Yes
+      }
 
       if ((decimal && (decimal !== this.numeric)) || (digit && (digit !== this.numeric))) {
         throw new Error('Decimal or digit does not match numeric value');
@@ -70,7 +64,7 @@ module.exports = function(ucdPath){
 
     copy(codePoint) {
       const res = new CodePoint([]);
-      for (let key of Object.keys(this || {})) {
+      for (let key of Object.keys(this)) {
         const val = this[key];
         res[key] = val;
       }
@@ -84,7 +78,7 @@ module.exports = function(ucdPath){
   let data = fs.readFileSync(ucdPath + '/UnicodeData.txt', 'ascii');
 
   let rangeStart = -1;
-  for (line of Array.from(data.split('\n'))) {
+  for (line of data.split('\n')) {
     if (line.length > 0) {
       parts = line.split(';');
       name = parts[1];
@@ -96,7 +90,7 @@ module.exports = function(ucdPath){
           throw new Error('No range end found');
         }
 
-        for (i = rangeStart, cp = i, end = codePoint.code; i <= end; i++, cp = i) {
+        for (i = rangeStart, cp = i, end = codePoint.code; i <= end; i++ , cp = i) {
           codePoints[cp] = codePoint.copy(cp);
         }
 
@@ -110,21 +104,22 @@ module.exports = function(ucdPath){
   }
 
   // Helper function to read a file from the unicode database
-  const readFile = function(filename, parse, fn) {
+  const readFile = function (filename, parse, fn) {
     if (typeof parse === 'function') {
       fn = parse;
       parse = true;
     }
 
     data = fs.readFileSync(ucdPath + '/' + filename, 'ascii');
-    for (line of Array.from(data.split('\n'))) {
+    for (line of data.split('\n')) {
+      line = line.trim();
       if ((line.length > 0) && (line[0] !== '#')) {
         parts = line.replace(/\s*#.*$/, '').split(/\s*;\s*/);
 
         // Parse codepoint range if requested
         if (parse) {
-          var match;
-          if (match = parts[0].match(/([a-z0-9]+)\.\.([a-z0-9]+)/i)) {
+          var match = parts[0].match(/([a-z0-9]+)\.\.([a-z0-9]+)/i);
+          if (match) {
             const start = parseInt(match[1], 16);
             end = parseInt(match[2], 16);
             parts[0] = [start, end];
@@ -142,28 +137,21 @@ module.exports = function(ucdPath){
 
   };
 
-  readFile('extracted/DerivedNumericValues.txt', function(parts) {
+  readFile('extracted/DerivedNumericValues.txt', function (parts) {
     let start;
-    [start, end] = Array.from(parts[0]);
+    [start, end] = parts[0];
     const val = parts[3];
-    return (() => {
-      let end1;
-      const result = [];
-      for (cp = start, end1 = end; cp <= end1; cp++) {
-        codePoint = codePoints[cp];
-        if (!codePoint.numeric) {
-          result.push(cp.numeric = val);
-        } else {
-          result.push(undefined);
-        }
+    for (cp = start; cp <= end; cp++) {
+      codePoint = codePoints[cp];
+      if (!codePoint.numeric) {
+        cp.numeric = val;
       }
-      return result;
-    })();
+    }
   });
 
   const combiningClasses = {};
   const joiningTypes = {};
-  readFile('PropertyValueAliases.txt', false, function(parts) {
+  readFile('PropertyValueAliases.txt', false, function (parts) {
     if (parts[0] === 'ccc') {
       const num = parseInt(parts[1]);
       name = parts[3];
@@ -171,56 +159,47 @@ module.exports = function(ucdPath){
     }
 
     if (parts[0] === 'jt') {
-      return joiningTypes[parts[1]] = parts[2];
+      joiningTypes[parts[1]] = parts[2];
     }
-});
+  });
 
-  for (codePoint of Array.from(codePoints)) {
-    if (codePoint != null) {
+  for (codePoint of codePoints) {
+    if (codePoint) {
       codePoint.combiningClassName = combiningClasses[codePoint.combiningClass];
     }
   }
 
-  readFile('Blocks.txt', function(parts) {
+  readFile('Blocks.txt', function (parts) {
     let start;
-    [start, end] = Array.from(parts[0]);
-    return (() => {
-      let end1;
-      const result = [];
-      for (cp = start, end1 = end; cp <= end1; cp++) {
-        result.push((codePoints[cp] != null ? codePoints[cp].block = parts[1] : undefined));
+    [start, end] = parts[0];
+    for (cp = start; cp <= end; cp++) {
+      if (codePoints[cp]) {
+        codePoints[cp].block = parts[1];
       }
-      return result;
-    })();
-});
+    }
+  });
 
-  readFile('Scripts.txt', function(parts) {
+  readFile('Scripts.txt', function (parts) {
     let start;
-    [start, end] = Array.from(parts[0]);
-    return (() => {
-      let end1;
-      const result = [];
-      for (cp = start, end1 = end; cp <= end1; cp++) {
-        result.push((codePoints[cp] != null ? codePoints[cp].script = parts[1] : undefined));
+    [start, end] = parts[0];
+    for (cp = start; cp <= end; cp++) {
+      if (codePoints[cp]) {
+        codePoints[cp].script = parts[1];
       }
-      return result;
-    })();
-});
+    }
+  });
 
-  readFile('EastAsianWidth.txt', function(parts) {
+  readFile('EastAsianWidth.txt', function (parts) {
     let start;
-    [start, end] = Array.from(parts[0]);
-    return (() => {
-      let end1;
-      const result = [];
-      for (cp = start, end1 = end; cp <= end1; cp++) {
-        result.push((codePoints[cp] != null ? codePoints[cp].eastAsianWidth = parts[1] : undefined));
+    [start, end] = parts[0];
+    for (cp = start; cp <= end; cp++) {
+      if (codePoints[cp]) {
+        codePoints[cp].eastAsianWidth = parts[1];
       }
-      return result;
-    })();
-});
+    }
+  });
 
-  readFile('SpecialCasing.txt', function(parts) {
+  readFile('SpecialCasing.txt', function (parts) {
     let conditions;
     const code = parts[0][0];
     const lower = parseCodes(parts[1]);
@@ -238,11 +217,11 @@ module.exports = function(ucdPath){
     }
 
     if (conditions) {
-      return codePoint.caseConditions = conditions;
+      codePoint.caseConditions = conditions;
     }
   });
 
-  readFile('CaseFolding.txt', function(parts) {
+  readFile('CaseFolding.txt', function (parts) {
     const code = parts[0][0];
     const type = parts[1];
     const folded = parseCodes(parts[2]);
@@ -250,76 +229,70 @@ module.exports = function(ucdPath){
     if (['C', 'F'].includes(type)) {
       codePoint = codePoints[code];
       if (!codePoint.lowercase || (codePoint.lowercase.join('|') !== folded.join('|'))) {
-        return codePoint.folded = folded;
+        codePoint.folded = folded;
       }
     }
   });
 
-  readFile('CompositionExclusions.txt', function(parts) {
+  readFile('CompositionExclusions.txt', function (parts) {
     const code = parts[0][0];
-    return codePoints[code].isExcluded = true;
+    codePoints[code].isExcluded = true;
   });
 
-  readFile('DerivedNormalizationProps.txt', function(parts) {
-    let prop, start, val;
-    [start, end] = Array.from(parts[0]), prop = parts[1], val = parts[2];
+  readFile('DerivedNormalizationProps.txt', function (parts) {
+    let start;
+    [start, end] = parts[0];
+    let prop = parts[1];
+    let val = parts[2];
 
     if (['NFD_QC', 'NFKD_QC', 'NFC_QC', 'NFKC_QC'].includes(prop)) {
-      return (() => {
-        const result = [];
-        for (let code = start, end1 = end; code <= end1; code++) {
-          result.push(codePoints[code][prop] = val === 'Y' ? 0 : val === 'N' ? 1 : 2);
-        }
-        return result;
-      })();
+      for (let code = start; code <= end; code++) {
+        codePoints[code][prop] = val === 'Y' ? 0 : val === 'N' ? 1 : 2;
+      }
     }
   });
 
-  readFile('ArabicShaping.txt', function(parts) {
-    let joiningGroup, joiningType, start;
-    [start, end] = Array.from(parts[0]),
-      name = parts[1],
-      joiningType = parts[2],
-      joiningGroup = parts[3];
+  readFile('ArabicShaping.txt', function (parts) {
+    let start;
+    [start, end] = parts[0];
+    let name = parts[1];
+    let joiningType = parts[2];
+    let joiningGroup = parts[3];
 
-    return (() => {
-      const result = [];
-      for (let code = start, end1 = end; code <= end1; code++) {
-        if (codePoints[code] != null) {
-          codePoints[code].joiningType = joiningTypes[joiningType];
-        }
-        result.push((codePoints[code] != null ? codePoints[code].joiningGroup = joiningGroup : undefined));
+    for (let code = start; code <= end; code++) {
+      if (codePoints[code]) {
+        codePoints[code].joiningType = joiningTypes[joiningType];
+        codePoints[code].joiningGroup = joiningGroup;
       }
-      return result;
-    })();
+    }
   });
 
-  readFile('IndicPositionalCategory.txt', function(parts) {
-    let prop, start;
-    [start, end] = Array.from(parts[0]), prop = parts[1];
-    return (() => {
-      const result = [];
-      for (let code = start, end1 = end; code <= end1; code++) {
-        result.push((codePoints[code] != null ? codePoints[code].indicPositionalCategory = prop : undefined));
+  readFile('IndicPositionalCategory.txt', function (parts) {
+    let start;
+    [start, end] = parts[0];
+    let prop = parts[1];
+
+    for (let code = start; code <= end; code++) {
+      if (codePoints[code]) {
+        codePoints[code].indicPositionalCategory = prop;
       }
-      return result;
-    })();
+    }
   });
 
-  readFile('IndicSyllabicCategory.txt', function(parts) {
-    let prop, start;
-    [start, end] = Array.from(parts[0]), prop = parts[1];
-    return (() => {
-      const result = [];
-      for (let code = start, end1 = end; code <= end1; code++) {
-        result.push((codePoints[code] != null ? codePoints[code].indicSyllabicCategory = prop : undefined));
+  readFile('IndicSyllabicCategory.txt', function (parts) {
+    let start;
+    [start, end] = parts[0];
+    let prop = parts[1];
+
+    for (let code = start; code <= end; code++) {
+      if (codePoints[code]) {
+        codePoints[code].indicSyllabicCategory = prop;
       }
-      return result;
-    })();
+    }
   });
 
-  for (codePoint of Array.from(codePoints)) {
-    if (((codePoint != null ? codePoint.decomposition.length : undefined) > 1) && !codePoint.isCompat && !codePoint.isExcluded) {
+  for (codePoint of codePoints) {
+    if (codePoint && (codePoint.decomposition.length > 1) && !codePoint.isCompat && !codePoint.isExcluded) {
       cp = codePoints[codePoint.decomposition[1]];
       cp.compositions[codePoint.decomposition[0]] = codePoint.code;
     }
