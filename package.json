@@ -16,12 +16,5 @@
   "bugs": {
     "url": "https://github.com/devongovett/codepoints/issues"
   },
-  "homepage": "https://github.com/devongovett/codepoints",
-  "devDependencies": {
-    "coffee-script": "^1.8.0"
-  },
-  "scripts": {
-    "prepublish": "coffee -c index.coffee && coffee -c parser.coffee",
-    "postpublish": "rm -f *.js"
-  }
+  "homepage": "https://github.com/devongovett/codepoints"
 }
